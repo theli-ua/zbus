@@ -104,6 +104,17 @@ fn sasl_auth_id() -> Result<String> {
 
         #[cfg(windows)]
         {
+            #[cfg(feature = "wine")]
+            {
+                if let Ok(addr) = std::env::var("DBUS_SESSION_BUS_ADDRESS") {
+                    if let Some(uid) = addr
+                        .strip_prefix("unix:path=/run/user/")
+                        .and_then(|s| s.strip_suffix("/bus"))
+                    {
+                        return Ok(uid.to_owned());
+                    }
+                }
+            }
             win32::ProcessToken::open(None)?.sid()?
         }
     };
